@@ -5,16 +5,16 @@
 #include "Adafruit_MQTT_Client.h"
 
 #define Rele1            D5
+//na definição do rele voçê pode usar mais de um, só sera limitado nas contas gratuitas do adafrit e IFTTT para criação de novas dashboards.
+#define WLAN_SSID       "********"             // nome da sua rede
+#define WLAN_PASS       "*********"        //sua senha wi-fi
 
-#define WLAN_SSID       "********"             // Your SSID
-#define WLAN_PASS       "*********"        // Your password
-
-/************************* Adafruit.io Setup *********************************/
+/****** Adafruit.io configurações **********/
 
 #define AIO_SERVER      "io.adafruit.com" //Adafruit Server
 #define AIO_SERVERPORT  1883                   
-#define AIO_USERNAME  "Danielengcomp2021"
-#define AIO_KEY       "aio_QoLA42Omz41M4ZLLBsf9C8JC4sZZ"
+#define AIO_USERNAME  "***********"// sua conta adafruit 
+#define AIO_KEY       "************"   sua key 
 
 //WIFI CLIENT
 WiFiClient client;
