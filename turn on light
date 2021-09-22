@@ -28,7 +28,6 @@ void MQTT_connect();
 void setup() {
   Serial.begin(115200);
 
-  pinMode(05, OUTPUT);
   pinMode(Rele1, OUTPUT);
    
   // Connect to WiFi access point.
