@@ -1,91 +1,183 @@
+/*********************** Inclusão de bibliotecas ********************/
+#include <ESP8266WiFi.h>              
+#include "Adafruit_MQTT.h"            
+#include "Adafruit_MQTT_Client.h"     
+#include "DHT.h"                      
+
+/******************* Definição de Constantes ****************************/
+const int Sala = 4;                  
+const int Quarto = 2;                
+const int Cozinha = 14;              
+const int Banheiro = 13;             
 
 
-#include <ESP8266WiFi.h>
-#include "Adafruit_MQTT.h"
-#include "Adafruit_MQTT_Client.h"
+/*******************Sensor de temperatura e umidade*************************/
 
-#define Rele1            D5
-//na definição do rele voçê pode usar mais de um, só sera limitado nas contas gratuitas do adafrit e IFTTT para criação de novas dashboards.
-#define WLAN_SSID       "********"             // nome da sua rede
-#define WLAN_PASS       "*********"        //sua senha wi-fi
+#define DHTPIN 5                             
+#define DHTTYPE DHT11                        
+DHT dht(DHTPIN, DHTTYPE, 15);                
 
-/****** Adafruit.io configurações **********/
+/******************* Configurações da Rede Wi-Fi ***************************/
 
-#define AIO_SERVER      "io.adafruit.com" //Adafruit Server
+
+#define WLAN_SSID       "Nayane"  
+#define WLAN_PASS       "96066499nd"          
+
+/************************* Configurações Adafruit.io *********************************/
+
+#define AIO_SERVER      "io.adafruit.com"      
 #define AIO_SERVERPORT  1883                   
-#define AIO_USERNAME  "***********"// sua conta adafruit 
-#define AIO_KEY       "************"   sua key 
+#define AIO_USERNAME  "Danielengcomp2021"         
+#define AIO_KEY       "aio_UIzi04ZUcpvSqBp8PJUBDsCvD8ze" 
 
-//WIFI CLIENT
-WiFiClient client;
 
-Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+/*************************** Configurações Globais  ***********************************/
 
-Adafruit_MQTT_Subscribe Light1 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/luz"); // Crie aqui sua variavel
+WiFiClient client;                                                                       
+Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);  
 
-void MQTT_connect();
+/****************************** Feeds ***************************************/
 
-void setup() {
-  Serial.begin(115200);
 
-  pinMode(Rele1, OUTPUT);
-   
-  // Connect to WiFi access point.
-  Serial.println(); Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(WLAN_SSID);
 
-  WiFi.begin(WLAN_SSID, WLAN_PASS);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println();
+Adafruit_MQTT_Subscribe sala = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/sala");  
+Adafruit_MQTT_Subscribe quarto = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/quarto"); 
+Adafruit_MQTT_Subscribe cozinha = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/cozinha"); 
+Adafruit_MQTT_Subscribe banheiro = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/banheiro"); 
+Adafruit_MQTT_Publish temperature = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/temperatura"); 
+Adafruit_MQTT_Publish humidity = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/umidade"); 
 
-  Serial.println("WiFi connected");
-  Serial.println("IP address: "); 
-  Serial.println(WiFi.localIP());
- 
-  mqtt.subscribe(&Light1);
- 
-}
+/*************************** Laço de conexão MQTT ************************************/
 
-void loop() {
- 
-  MQTT_connect();
+void MQTT_connect();    
+
+/*************************** Laço de configuração************************************/
+
+void setup() {         
   
-  Adafruit_MQTT_Subscribe *subscription;
-  while ((subscription = mqtt.readSubscription(20000))) {
-    if (subscription == &Light1) {
+  dht.begin();             
+  
+  pinMode(Sala, OUTPUT); 
+  pinMode(Quarto, OUTPUT); 
+  pinMode(Cozinha, OUTPUT); 
+  pinMode(Banheiro, OUTPUT); 
+  
+  Serial.begin(115200);  
+  delay(10);            
+
+  WiFi.begin(WLAN_SSID, WLAN_PASS);  
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);                    
+                                        }
+
+  mqtt.subscribe(&sala);   
+  mqtt.subscribe(&quarto); 
+  mqtt.subscribe(&cozinha); 
+  mqtt.subscribe(&banheiro); 
+             }
+
+
+uint32_t x=0;  
+
+/*************************** Laço de repetição************************************/
+
+void loop() {  
+
+  MQTT_connect();                           
+  int umid = (int)dht.readHumidity();       
+  int tempe = (int)dht.readTemperature();   
+
+  if (! temperature.publish(tempe))        
+    Serial.println(F("Falha na publicação da temperatura")); 
+  else                                        
+   Serial.println(F("Temperatura publicada!")); 
+  if (! humidity.publish(umid))  
+    Serial.println(F("Falha na publicação da umidade")); 
+  else                                                   
+    Serial.println(F("Umidade publicada!"));            
+    
+  Adafruit_MQTT_Subscribe *subscription;                
+  while ((subscription = mqtt.readSubscription(5000))) { 
+
+    
+    if (subscription == &sala) {   
+
       Serial.print(F("Got: "));
-      Serial.println((char *)Light1.lastread);
-      int Light1_State = atoi((char *)Light1.lastread);
-      digitalWrite(Rele1, Light1_State);
-       
-    }
+      Serial.println((char *)Sala.lastread);
+      int Sala_State = atoi((char *)Sala.lastread);
+      digitalWrite(4, Sala_State)
+      
+      if (strcmp((char *)sala.lastread, "desliga") == 0) { 
+         digitalWrite(Sala, LOW);  
+                                                       }
+      if (strcmp((char *)sala.lastread, "liga") == 0) { 
+        digitalWrite(Sala, HIGH);
+                                  
+                                                          }
+                               }
+    
+    if (subscription == &quarto) {    
+      
+      if (strcmp((char *)quarto.lastread, "desliga") == 0) { 
+        digitalWrite(Quarto, LOW);                         
+                                                         }
+      if (strcmp((char *)quarto.lastread, "liga") == 0) { 
+        digitalWrite(Quarto, HIGH);                          
+                                                            }
+                                 }
+
+     
+     if (subscription == &cozinha) {  
+      
+      if (strcmp((char *)cozinha.lastread, "desliga") == 0) { 
+        digitalWrite(Cozinha, LOW);                         
+                                                          }
+      if (strcmp((char *)cozinha.lastread, "liga") == 0) { 
+        digitalWrite(Cozinha, HIGH);                           
+                                                             }
+                                   }
+     
+     if (subscription == &banheiro) { 
+      
+      if (strcmp((char *)banheiro.lastread, "desliga") == 0) {  
+        digitalWrite(Banheiro, LOW);                          
+                                                           }
+      if (strcmp((char *)banheiro.lastread, "liga") == 0) { 
+        digitalWrite(Banheiro, HIGH);                          
+                                                              }
+                                      }
+    
   }
+
+  if(! mqtt.ping()) {      
+    mqtt.disconnect();    
+                    }
+
 }
 
-void MQTT_connect() {
-  int8_t ret;
+/*************************** Laço de conexão************************************/
 
-  if (mqtt.connected()) {
-    return;
-  }
-
-  Serial.print("Connecting to MQTT... ");
-
-  uint8_t retries = 3;
+void MQTT_connect() {        
   
-  while ((ret = mqtt.connect()) != 0) {
-    Serial.println(mqtt.connectErrorString(ret));
-    Serial.println("Retrying MQTT connection in 5 seconds...");
-    mqtt.disconnect();
-    delay(5000); 
-    retries--;
-    if (retries == 0) {
-      while (1);
-    }
+  int8_t ret;             
+
+
+  if (mqtt.connected()) {   
+    return;                 
   }
-  Serial.println("MQTT Connected!");
+
+  Serial.print("Conectando... ");   
+
+  uint8_t retries = 3;      
+  while ((ret = mqtt.connect()) != 0) { 
+       Serial.println(mqtt.connectErrorString(ret)); 
+       Serial.println("Reconectando em 5s..."); 
+       mqtt.disconnect();   
+       delay(5000);  
+       retries--;     
+       if (retries == 0) {
+         while (1);
+       }
+  }
+  Serial.println("Conectado!");   
 }
