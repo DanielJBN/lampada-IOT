@@ -1,3 +1,14 @@
+//definição dos pinos
+//D0= 16
+//D1= 5
+//D2= 4
+//D3= 0
+//D4= 2
+//D5= 14
+//D6= 12
+//D7= 13
+//D8= 15
+
 /*********************** Inclusão de bibliotecas ********************/
 #include <ESP8266WiFi.h>              
 #include "Adafruit_MQTT.h"            
@@ -20,15 +31,15 @@ DHT dht(DHTPIN, DHTTYPE, 15);
 /******************* Configurações da Rede Wi-Fi ***************************/
 
 
-#define WLAN_SSID       "Nayane"  
-#define WLAN_PASS       "96066499nd"          
-
+#define WLAN_SSID       "xxxxxx"  
+#define WLAN_PASS       "xxxxxx"          
+ 
 /************************* Configurações Adafruit.io *********************************/
 
 #define AIO_SERVER      "io.adafruit.com"      
 #define AIO_SERVERPORT  1883                   
 #define AIO_USERNAME  "Danielengcomp2021"         
-#define AIO_KEY       "aio_UIzi04ZUcpvSqBp8PJUBDsCvD8ze" 
+#define AIO_KEY       "key " 
 
 
 /*************************** Configurações Globais  ***********************************/
@@ -100,19 +111,13 @@ void loop() {
   while ((subscription = mqtt.readSubscription(5000))) { 
 
     
-    if (subscription == &sala) {   
-
-      Serial.print(F("Got: "));
-      Serial.println((char *)Sala.lastread);
-      int Sala_State = atoi((char *)Sala.lastread);
-      digitalWrite(4, Sala_State)
+    if (subscription == &sala) {      
       
       if (strcmp((char *)sala.lastread, "desliga") == 0) { 
-         digitalWrite(Sala, LOW);  
+         digitalWrite(Sala, LOW);                        
                                                        }
       if (strcmp((char *)sala.lastread, "liga") == 0) { 
-        digitalWrite(Sala, HIGH);
-                                  
+        digitalWrite(Sala, HIGH);                           
                                                           }
                                }
     
@@ -181,3 +186,4 @@ void MQTT_connect() {
   }
   Serial.println("Conectado!");   
 }
+
